@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa com Leaflet e Transição de Imagens</title>
+    
+    <!-- Incluindo o CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    
+    <style>
+        /* Estilização para o mapa e a modal */
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Modal para exibir o panorama 360° */
+        .modal {
+            display: none; /* Inicialmente, a modal fica oculta */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 500px;
+        }
+
+        .modal-content a-scene {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Botão para fechar a modal */
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            z-index: 1001; /* Garante que o botão fique à frente da modal */
+        }
+
+        /* Estilização do popup */
+        .leaflet-popup-content {
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .leaflet-popup-content img {
+            width: 200px;
+            height: auto;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .leaflet-popup-content h3 {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .leaflet-popup-content p {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Div para o mapa -->
+    <div id="map"></div>
+
+    <!-- Modal para exibir o panorama 360° com A-Frame -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <a-scene embedded>
+                <a-sky id="panorama" rotation="0 -90 0"></a-sky>
+            </a-scene>
+        </div>
+    </div>
+
+    <!-- Incluindo o JavaScript do Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Array de lugares com coordenadas e informações
+        const places = [
+            { coordinates: [-24.987859731678746, -53.44917952674408], image: 'imagem1.jpg', title: 'Local 1', description: 'Descrição do Local 1.' },
+            { coordinates: [-24.987859, -53.449079], image: 'imagem2.jpg', title: 'Local 2', description: 'Descrição do Local 2.' },
+            // Adicione mais locais aqui com suas imagens
+        ];
+
+        // Inicializando o mapa com o primeiro local como foco
+        const firstPlaceCoordinates = places[0].coordinates;
+        const map = L.map('map').setView(firstPlaceCoordinates, 14);
+
+        // Adicionando a camada de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Adicionando marcadores para cada lugar
+        places.forEach(place => {
+            const marker = L.marker(place.coordinates).addTo(map);
+
+            // Conteúdo do popup com imagem, título e descrição
+            const popupContent = `
+                <img src="${place.image}" alt="Imagem do local" id="popupImage" />
+                <h3>${place.title}</h3>
+                <p>${place.description}</p>
+            `;
+
+            // Adicionando o popup ao marcador
+            marker.bindPopup(popupContent);
+
+            // Abrir o popup ao clicar no marcador
+            marker.on('click', function() {
+                marker.openPopup();
+            });
+        });
+
+        // Fechando a modal
+        const modal = document.getElementById('imageModal');
+        const closeModal = document.getElementsByClassName('close')[0];
+
+        closeModal.onclick = function() {
+            modal.style.display = 'none'; // Fecha a modal
+        }
+
+        // Fecha a modal se o usuário clicar fora da área da imagem
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none'; // Fecha a modal
+            }
+        }
+
+        // Evento de clique na imagem do popup para abrir o panorama
+        document.addEventListener('click', function(event) {
+            if (event.target && event.target.id === 'popupImage') {
+                const panoramaSrc = 'panorama.jpg'; // Define a imagem 'panorama.jpg'
+                document.getElementById('panorama').setAttribute('src', panoramaSrc); // Define o panorama no A-Frame
+                modal.style.display = 'flex'; // Exibe a modal com o panorama 360°
+            }
+        });
+    </script>
+</body>
+</html>
